@@ -17,9 +17,14 @@
 
 /* Global variables --------------------------------------------------------------------*/
 
+/* Macro--------------------------------------------------------------------------------*/
+#define DEBUG_MODE
+
 /* Private Function Prototypes ----------------------------------------------------------*/
 static void UpdPar();
 static void CalcThrust();
+static void matrix_multiply(int16_t* pSrc1, int16_t* pSrc2, int16_t* pDst, uint8_t src1_rows,
+		uint8_t src1_columns, uint8_t src2_rows, uint8_t src2_columns);
 
 
 
@@ -36,6 +41,8 @@ static int16_t Err[6] 		= {0}; 											//	Error, from set point to sensor val
 static int16_t ErrOld[6] 	= {0}; 											//	Last Error, from set point to sensor value
 static int16_t KpU[6]		= {0};											//  Gain from regulator (x 1/1000)
 static int16_t KPmax[6] 	= {19800,19800,28000,4480,4480,4970};			//  Maximum axis gain 	(x 1/1000)
+
+
 
 static int16_t Phi = 0;														//	Proportional value for height control
 static int16_t Ppi = 0;														//	Proportional value for pitch control
@@ -72,8 +79,12 @@ static int16_t sizeKP[2] 	= {6,1};
 static int16_t CalcSum 		= 0;
 
 //TEST PARAMETER
-static int16_t TEST1[2][3] = {{1, 2, 3},{4,5,6}};
-static int16_t TEST2[3][2] = {{1,2},{3,4},{5,6}};
+static int16_t TEST1[2][3] = {	{1, 2, 3},
+		{4, 5, 6}};
+
+static int16_t TEST2[3][2] = {	{1, 2},
+		{3, 4},
+		{5, 6}};
 static int16_t TEST3[2][2] = {0};
 static int16_t TES1 = 0;
 static int16_t TES2 = 0;
@@ -81,21 +92,20 @@ static int16_t TES2 = 0;
 extern void regulateThrusters(void){
 	CalcThrust();
 	int32_t test = sizeABR[0];
-	/*printf(" Thrusterpådrag: %d ", PP[0][0]);
-	printf("%d ", PP[1][0]);
-	printf("%d ", PP[2][0]);
-	printf("%d ", PP[3][0]);
-	printf("%d ", PP[4][0]);
-	printf("%d ", PP[5][0]);
-	printf("%d ", PP[6][0]);
-	printf("%d ", PP[7][0]);
+	//	printf(" Thrusterpådrag: %d ", PP[0][0]);
+	//	printf("%d ", PP[1][0]);
+	//	printf("%d ", PP[2][0]);
+	//	printf("%d ", PP[3][0]);
+	//	printf("%d ", PP[4][0]);
+	//	printf("%d ", PP[5][0]);
+	//	printf("%d ", PP[6][0]);
+	//	printf("%d ", PP[7][0]);
 
-*/
 	/*printf("Sum = %d ", TEST3[0][0]);
 	printf("Sum = %d ", TEST3[0][1]);
 	printf("Sum = %d ", TEST3[1][0]);
 	printf("Sum = %d ", TEST3[1][1]);
-	*/
+	 */
 }
 
 
@@ -163,28 +173,17 @@ static void CalcThrust(){
 	KP [4][0] = 235;
 	KP [5][0] = 0;
 
+	uint16_t test1[2][3] = {{1, 2, 3, 4},
+							{5, 6, 7, 8}};
 
+	uint16_t test2[3][2] = {{1, 2}, {2, 3}, {3, 4}, {4, 5}};
 
-	printf(" Starter aa regne \n");
-	TES1 = 0;
-	TES2 = 0;
-	for (int i = 0; i < 2; i++){
-		for (int j = 0; j < 2; j++){
-			CalcSum = 0;
-			for (int k = 0; k < sizeABR[1]; k++){
-				TES1 = TEST1[i][k];
-				TES2 = TEST2[k][j];
-				CalcSum += TES1*TES2;
-				//CalcSum += *ABR[i, k] * *KP[k, j];
-			}
-			printf("\n Sum = %d ", CalcSum);
-			//*PP[i, j] = CalcSum;
-		//TEST3[i,j] = CalcSum;
-		}
-	}
-	printf(" Regnet ferdig \n");
+	uint16_t resultat[2][2] = {0};
 
-
+	matrix_multiply(test1, test2, resultat, 2, 4, 4, 2);
+	printf("%d, %d", resultat[0][0], resultat[0][1]);
+	printf("%d, %d", resultat[1][0], resultat[1][1]);
+	printf(" ikkje skriv punktum!");
 }
 
 extern int16_t getThrusterValues(void){
@@ -227,3 +226,49 @@ extern void setRotRegparam(int16_t sKp_r, int16_t sTi_r, int16_t sTd_r){
 	Ti_r = sTi_r;
 	Td_r = sTd_r;
 }
+
+static void matrix_multiply(int16_t* pSrc1, int16_t* pSrc2, int16_t* pDst, uint8_t src1_rows,
+		uint8_t src1_columns, uint8_t src2_rows, uint8_t src2_columns){
+
+	if(src1_columns != src2_rows){
+#ifdef DEBUG_MODE
+		printf("Error: Matrix must have same dimensions.(this text is red)");
+#endif
+		return;
+	}
+
+	int16_t* p1 = pSrc1;
+	int16_t* p2 = pSrc2;
+	int16_t* p3 = pDst;
+
+	int16_t sum=0, n1, n2;
+
+
+	uint8_t dst_rows = src1_rows;
+	uint8_t dst_columns = src2_columns;
+
+	uint8_t i, j, k;
+
+	for(i=0; i<src1_rows; i++){
+		for(j=0; j<src2_columns; j++) {
+			for(k=0; k<src1_columns; k++){
+				n1 = *p1;
+				n2 = *p2;
+				sum += n1*n2;
+				p1 ++;
+				p2 += src2_columns;
+			}
+			printf("sum = %d", sum);
+			p1 = pSrc1;
+			p2 = pSrc2 + 1;
+			*p3 = sum;
+			p3 ++;
+			sum = 0;
+		}
+		p1 = pSrc1 + src1_columns;
+		p2 = pSrc2;
+		p3 = pDst + dst_columns;
+	}
+
+}
+
