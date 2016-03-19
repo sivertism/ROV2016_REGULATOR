@@ -23,27 +23,30 @@
 
 // Macro -------------------------------------------------------------------------------
 
+
+extern void regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens);
 /* Call this method to start the regulator. Call this method every Ts. */
-extern void regulateThrusters(void);
+
 
 /*Send updated variables from top side and sensor before calling regulateThrusters.*/
-extern void UpdateTopsideVar(int16_t* PReg, int16_t* PAcc);
-extern void UpdateSensorVar(int16_t* Sens);
 
 
-/*Set point for the time interval of the regulator, in milliseconds
-*Initial the Ts = 100 mS
-*/
-extern void setTimestamp(uint16_t* Tst);
 
-/*Get updatet thruster values from regulator*/
 extern int16_t getThrusterValues(void);
+/*Get updated thruster values from regulator*/
 
 
-/*Set regulator parameters*/
-/*Translational*/
-extern void setTransRegparam(int16_t sKp_t, int16_t sTi_t, int16_t sTd_t);	//Initial parameters: (8.5,2.8,2.8)
-
-/*Rotational*/
-extern void setRotRegparam(int16_t sKp_r, int16_t sTi_r, int16_t sTd_r);	//Initial parameters: (0 9990 0)
+extern void setUpReg(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sTd_t,
+		int16_t sKp_r, int16_t sTi_r, int16_t sTd_r, int16_t maxThrust);
+/*Set regulator parameters
+ * timeStamp 	= time stamp in milli seconds
+ * sKp_t 		= translational KP value
+ * sTi_t 		= translational TI value
+ * sTd_t 		= translational TD value
+ * sKp_r 		= rotational KP value
+ * sTi_r 		= rotational TI value
+ * sTd_r 		= rotational TD value
+ * maxThrust 	= maximal thruster values, in Newton
+ *
+ * */
 
