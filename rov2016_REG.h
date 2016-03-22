@@ -24,7 +24,7 @@
 // Macro -------------------------------------------------------------------------------
 
 
-extern void regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens);
+extern void REG_regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens);
 /* Call this method to start the regulator. Call this method every Ts.
  * PReg 				Set point for roll, pitch and depth			(mRad, mRad, mm)
  * Sens					Sensor data for roll, pitch and depth 		(mRad, mRad, mm)
@@ -37,11 +37,11 @@ extern void regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens);
 
 
 
-extern int16_t* getThrusterValues(void);
+extern int16_t* REG_getThrusterValues(void);
 /*Get updated thruster values from regulator*/
 
 
-extern void setUpReg(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sTd_t,
+extern void REG_init(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sTd_t,
 		int16_t sKp_r, int16_t sTi_r, int16_t sTd_r, int16_t maxThrust);
 /*Set regulator parameters
  * timeStamp 	= time stamp in milli seconds

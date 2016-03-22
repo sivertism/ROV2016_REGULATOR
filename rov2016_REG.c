@@ -28,41 +28,41 @@ static void matrix_multiply(int32_t* pSrc1, int32_t* pSrc2, int32_t* pDst, uint8
 
 
 /* Private variables -------------------------------------------------------------------*/
-static int16_t setPReg[] 	= {0,0,0}; 					/*Set point for roll, pitch and depth(x 1/1000)-------------*/
-static int32_t setPAcc[] 	= {0,0,0,0,0,0};					/*Set point for surge, swai and yaw(x 1/1000)---------------*/
-static int16_t SensDat[]	= {0,0,0,0,0,0}; 			/*Data from sensor node(x 1/1000)---------------------------*/
-static int32_t uP[] 		= {{0},{0},{0},{0},{0},{0},{0},{0}}; 		/*Thruster gain in uNewton------------------------------*/
-static int32_t mP[] 		= {{0},{0},{0},{0},{0},{0},{0},{0}}; 		/*Thruster gain in milliNewton------------------------------*/
+static int16_t setPReg[] 	= {0,0,0}; 	/*Set point for roll, pitch and depth(x 1/1000)*/
+static int32_t setPAcc[] 	= {0,0,0,0,0,0};/*Set point for surge, swai and yaw(x 1/1000)*/
+static int16_t SensDat[]	= {0,0,0,0,0,0}; /*Data from sensor node(x 1/1000)*/
+static int32_t uP[] 		= {{0},{0},{0},{0},{0},{0},{0},{0}};/*Thruster gain in uNewton*/
+static int32_t mP[] 		= {{0},{0},{0},{0},{0},{0},{0},{0}};/*Thruster gain in milliNewton*/
 
 
-/* Regulator variables -------------------------------------------------------------------*/
-static uint16_t Ts 			= 100;											// 	Time step for regulator
-static int16_t Err[6] 		= {0}; 											//	Error, from set point to sensor value
-static int16_t ErrOld[6] 	= {0}; 											//	Last Error, from set point to sensor value
-static int32_t KpReg[6]		= {0};											//  Gain from regulator (x 1/1000 N)
-static int32_t KPmax[6] 	= {0};											//  Maximum axis gain 	(x 1/1000 N)
-static int16_t Pmax 		= 0;											//  Maximum thruster gain 	(x 1/1000 N)
+/* Regulator variables -----------------------------------------------------------------*/
+static uint16_t Ts 			= 100;			// 	Time step for regulator
+static int16_t Err[6] 		= {0}; 			//	Error, from set point to sensor value
+static int16_t ErrOld[6] 	= {0}; 			//	Last Error, from set point to sensor value
+static int32_t KpReg[6]		= {0};			//  Gain from regulator (x 1/1000 N)
+static int32_t KPmax[6] 	= {0};			//  Maximum axis gain 	(x 1/1000 N)
+static int16_t Pmax 		= 0;			//  Maximum thruster gain 	(x 1/1000 N)
 
 
-static int16_t Phi = 0;														//	Proportional value for height control
-static int16_t Ppi = 0;														//	Proportional value for pitch control
-static int16_t Pro = 0;														//	Proportional value for roll control
+static int16_t Phi = 0;						//	Proportional value for height control
+static int16_t Ppi = 0;						//	Proportional value for pitch control
+static int16_t Pro = 0;						//	Proportional value for roll control
 
-static int16_t Ihi = 0;														//	Integral value for height control
-static int16_t Ipi = 0;														//	Integral value for pitch control
-static int16_t Iro = 0;														//	Integral value for roll control
+static int16_t Ihi = 0;						//	Integral value for height control
+static int16_t Ipi = 0;						//	Integral value for pitch control
+static int16_t Iro = 0;						//	Integral value for roll control
 
-static int16_t Dhi = 0;														//	Derivative value for height control
-static int16_t Dpi = 0;														//	Derivative value for pitch control
-static int16_t Dro = 0;														//	Derivative value for roll control
+static int16_t Dhi = 0;						//	Derivative value for height control
+static int16_t Dpi = 0;						//	Derivative value for pitch control
+static int16_t Dro = 0;						//	Derivative value for roll control
 
-static int16_t Kp_t = 0;														//Parameter for regulator
-static int16_t Ti_t = 0;														//Parameter for regulator
-static int16_t Td_t = 0;														//Parameter for regulator
+static int16_t Kp_t = 0;					//Parameter for regulator
+static int16_t Ti_t = 0;					//Parameter for regulator
+static int16_t Td_t = 0;					//Parameter for regulator
 
-static int16_t Kp_r = 0;														//Parameter for regulator
-static int16_t Ti_r = 0;													//Parameter for regulator
-static int16_t Td_r = 0;														//Parameter for regulator
+static int16_t Kp_r = 0;					//Parameter for regulator
+static int16_t Ti_r = 0;					//Parameter for regulator
+static int16_t Td_r = 0;					//Parameter for regulator
 
 
 
@@ -87,7 +87,7 @@ static int16_t sizeKP[2] 	= {6,1};
 static int16_t CalcSum 		= 0;
 
 
-extern void regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens){
+extern void REG_regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens){
 
 	setPReg[3] = PReg[0];		//roll
 	setPReg[4] = PReg[1];		//pitch
@@ -126,44 +126,22 @@ static void CalcThrust(){
 
 	// 2: Calculate thruster gain from PID regulator
 
-
-
 	// Depth
 	Phi  = Kp_t*Err[2];														// Proportional part
 	Ihi += Kp_t*(Ts/Ti_t)*Err[2]/1000;										// Integral part
 	Dhi  = Kp_t*Ts*(ErrOld[2]-Err[2])*1000;									// Diff. part
 	KpReg[2]  = (int32_t) (Phi + Ihi + Dhi)/10;								// Sum all three, mN/mNm
 
-
-	printf("diff, dybde %d,", Err[2]);
-	printf("Bidrag, P %d,", Phi);
-	printf("Bidrag, I %d,", Ihi);
-	printf("Bidrag, D %d,", Dhi);
-	printf("Bidrag, dybde %d,", KpReg[2]);
-
 	// Roll
 	Pro  = Kp_r*Err[3];															// Proportional part
 	Iro += Kp_r*(Ts/Ti_r)*Err[3]/1000;											// Integral part
 	Dro  = Kp_t*Ts*(ErrOld[3]-Err[3])/1000;										// Diff. part
 	KpReg[3]  = (int32_t) (Pro + Iro + Dro)/10;									// Sum all three, mN/mNm
-
-	printf("diff, roll %d,", Err[3]);
-	printf("Bidrag, P %d,", Pro);
-	printf("Bidrag, I %d,", Iro);
-	printf("Bidrag, D %d,", Dro);
-	printf("Bidrag, roll %d,", KpReg[3]);
-
 	// Pitch
 	Ppi = Kp_r*Err[4];															// Proportional part
 	Ipi += Kp_r*(Ts/Ti_r)*Err[4]/1000;											// Integral part
 	Dpi  = Kp_t*Ts*(ErrOld[4]-Err[4])/1000;										// Diff. part
 	KpReg[4]  = (int32_t) (Ppi + Ipi + Dpi)/10;											// Sum all three, mN/mNm
-
-		printf("diff, pitch %d,", Err[4]);
-		printf("Bidrag, P %d,", Ppi);
-		printf("Bidrag, I %d,", Ipi);
-		printf("Bidrag, D %d,", Dpi);
-		printf("Bidrag, pitch %d,", KpReg[4]);
 
 
 	// 3: Sum up regulator output + setPAcc, and scale. (mN/mNm)
@@ -178,7 +156,6 @@ static void CalcThrust(){
 
 	// 4: Update values in PP
 	// mP(6x1) = ABR(8*6) * KP(6x1);
-	printf("KpPlott: = %d %d %d %d %d %d  ", Kp[0][0], Kp[1][0], Kp[2][0], Kp[3][0], Kp[4][0], Kp[5][0]);
 
 	matrix_multiply(ABR,Kp, uP, 8, 6, 6, 1);
 
@@ -187,14 +164,11 @@ static void CalcThrust(){
 		mP[i] = uP[i]/1000;
 		if(mP[i] > Pmax) mP[i] = Pmax;
 	}
-
-	printf("Thrusterpadrag: P1 = %d, P2 = %d ,P3 = %d, P4 = %d, P5 = %d, P6 = %d, P7 = %d, P8 = %d,", mP[0],mP[1],mP[2],mP[3], mP[4], mP[5], mP[6], mP[7]);
-
 }
 
 
 
-extern int16_t* getThrusterValues(void){
+extern int16_t* REG_getThrusterValues(void){
 	return mP;
 }
 
@@ -202,7 +176,7 @@ extern int16_t* getThrusterValues(void){
 
 
 /*Set regulator parameters*/
-extern void setUpReg(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sTd_t,
+extern void REG_init(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sTd_t,
 		int16_t sKp_r, int16_t sTi_r, int16_t sTd_r,  int16_t maxThrust){
 
 	volatile uint8_t i;
@@ -228,10 +202,7 @@ extern void setUpReg(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sT
 static void matrix_multiply(int32_t* pSrc1, int32_t* pSrc2, int32_t* pDst, uint8_t src1_rows,
 		uint8_t src1_columns, uint8_t src2_rows, uint8_t src2_columns){
 
-	if(src1_columns != src2_rows){
-#ifdef DEBUG_MODE
-		printf("Error: Matrix must have same dimensions.");
-#endif
+	if(src1_columns != src2_rows){f
 		return;
 	}
 
