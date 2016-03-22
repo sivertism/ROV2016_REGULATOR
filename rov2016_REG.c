@@ -82,6 +82,7 @@ static int16_t sizeABR[2] 	= {8,6};
 static int16_t sizeKP[2] 	= {6,1};
 static int16_t CalcSum 		= 0;
 
+/* Function definitions ----------------------------------------------------------------*/
 
 extern void REG_regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens){
 
@@ -100,10 +101,6 @@ extern void REG_regulateThrusters(int16_t* PReg, int16_t* PAcc, int16_t* Sens){
 
 	CalcThrust();
 }
-
-
-/* Function definitions ----------------------------------------------------------------*/
-
 
 static void CalcThrust(){
 	/*l
@@ -243,3 +240,38 @@ static void matrix_multiply(int32_t* pSrc1, int32_t* pSrc2, int32_t* pDst, uint8
 
 }
 
+/**
+ * @brief  	Calculates tilt compensated heading.
+ * 			Button/axes mapping:
+ * 				0. Left trigger:			Depth -
+ * 				1. Right trigger:			Depth +
+ * 				2. Left stick L/R:			Sway
+ * 				3. Left stick fwd/back:		Surge
+ * 				4. Right stick L/R:			Roll
+ * 				5. Right stick fwd/back:	Pitch
+ * @param  	Pointer to controller CAN-messages.
+ * @retval 	int16_t array containing controller data.
+ */
+static int16_t* REG_readController(uint8_t* controller_package1, uint8_t* controller_package2){
+	int16_t controller_data[6];
+
+	/* Left trigger */
+	controller_data[0] = ( (int16_t)*(controller_package1 + 5) << 8 ) | *(controller_package1 + 4);
+
+	/* Right trigger */
+	controller_data[1] = ( (int16_t)*(controller_package2 + 3) << 8) | *(controller_package2 + 2);
+
+	/* Left stick left/right*/
+	controller_data[2] = ( (int16_t)*(controller_package1 + 1) << 8) | *controller_package1;
+
+	/* Left stick fwd/back */
+	controller_data[3] = ( (int16_t)*(controller_package1 + 3) << 8) | *(controller_package1 + 2);
+
+	/* Right stick left/right */
+	controller_data[4] = ( (int16_t)*(controller_package1 + 7) << 8) | *(controller_package1 + 6);
+
+	/* Right stick fwd/back */
+	controller_data[5] = ( (int16_t)*(controller_package2 + 1) << 8) | *controller_package2;
+
+	return controller_data;
+}
