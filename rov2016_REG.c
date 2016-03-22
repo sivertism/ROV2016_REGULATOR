@@ -10,10 +10,6 @@
 
 /* Include .h files from other modules here.*/
 #include "stm32f30x.h"
-#include "stm32f30x_usart.h"
-#include "stm32f30x_gpio.h"
-#include "stm32f30x_rcc.h"
-#include "float.h"
 
 /* Global variables --------------------------------------------------------------------*/
 
@@ -28,11 +24,11 @@ static void matrix_multiply(int32_t* pSrc1, int32_t* pSrc2, int32_t* pDst, uint8
 
 
 /* Private variables -------------------------------------------------------------------*/
-static int16_t setPReg[] 	= {0,0,0}; 	/*Set point for roll, pitch and depth(x 1/1000)*/
-static int32_t setPAcc[] 	= {0,0,0,0,0,0};/*Set point for surge, swai and yaw(x 1/1000)*/
-static int16_t SensDat[]	= {0,0,0,0,0,0}; /*Data from sensor node(x 1/1000)*/
-static int32_t uP[] 		= {{0},{0},{0},{0},{0},{0},{0},{0}};/*Thruster gain in uNewton*/
-static int32_t mP[] 		= {{0},{0},{0},{0},{0},{0},{0},{0}};/*Thruster gain in milliNewton*/
+static int16_t setPReg[3] 	= {0}; 	/*Set point for roll, pitch and depth(x 1/1000)*/
+static int32_t setPAcc[6] 	= {0};/*Set point for surge, swai and yaw(x 1/1000)*/
+static int16_t SensDat[6]	= {0}; /*Data from sensor node(x 1/1000)*/
+static int32_t uP[8] 		= {0};/*Thruster gain in uNewton*/
+static int32_t mP[8] 		= {0};/*Thruster gain in milliNewton*/
 
 
 /* Regulator variables -----------------------------------------------------------------*/
@@ -202,7 +198,7 @@ extern void REG_init(int16_t timeStamp, int16_t sKp_t, int16_t sTi_t, int16_t sT
 static void matrix_multiply(int32_t* pSrc1, int32_t* pSrc2, int32_t* pDst, uint8_t src1_rows,
 		uint8_t src1_columns, uint8_t src2_rows, uint8_t src2_columns){
 
-	if(src1_columns != src2_rows){f
+	if(src1_columns != src2_rows){
 		return;
 	}
 
